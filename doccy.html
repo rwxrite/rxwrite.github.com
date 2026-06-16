@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ULTRAKILL Rank Maker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #1a1a1a; color: #eee; font-family: sans-serif; padding: 2rem; }
+.preview-area {
+  background: #111;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 140px;
+  margin-bottom: 1.25rem;
+  position: relative;
+}
+/* Hide the raw canvas, show the output image so users can right-click it */
+canvas#preview { display: none; }
+img#outputImage { border-radius: 4px; max-width: 100%; height: auto; cursor: pointer; }
+
+.presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center; }
+.presets span { font-size: 13px; color: #aaa; margin-right: 2px; }
+.pb {
+  background: #111; border: 0.5px solid #444; border-radius: 5px;
+  padding: 5px 11px; cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 1px;
+  transition: border-color 0.15s;
+}
+.pb:hover { border-color: #aaa; }
+.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ctrl { display: flex; flex-direction: column; gap: 4px; }
+.ctrl label { font-size: 13px; color: #aaa; }
+.ctrl input[type=text] {
+  font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 2px;
+  text-transform: uppercase; background: #222; border: 0.5px solid #555;
+  color: #fff; border-radius: 5px; padding: 6px 10px;
+}
+.ctrl input[type=color] { width: 100%; height: 34px; padding: 2px; cursor: pointer; border-radius: 5px; border: 0.5px solid #555; background: #222; }
+.ctrl input[type=range] { width: 100%; accent-color: #ff2200; }
+.ctrl-chk { flex-direction: row; align-items: center; gap: 8px; margin-top: 10px; }
+.ctrl-chk input { width: 18px; height: 18px; cursor: pointer; }
+.full { grid-column: 1 / -1; }
+.row { display: flex; gap: 8px; align-items: center; }
+.val { font-size: 13px; min-width: 34px; color: #aaa; }
+</style>
+</head>
+<body>
+
+<div class="preview-area">
+  <canvas id="preview" width="300" height="100"></canvas>
+  <img id="outputImage" alt="Right click to save rank" title="Right click to save image" />
+</div>
+
+<div class="presets">
+  <span>Presets:</span>
+  <button class="pb" onclick="applyPreset('ULTRAKILL')" style="color:#ffcc00;"><span style="color:#ffcc00;">ULTRA</span><span style="color:#ffcc00;font-size:14px;">KILL</span></button>
+  <button class="pb" onclick="applyPreset('SSS')" style="color:#ff2200;"><span style="color:#ff2200;">SSS</span><span style="color:#fff;font-size:14px;">HITSTORM</span></button>
+  <button class="pb" onclick="applyPreset('SS')"><span style="color:#ff2200;">SS</span><span style="color:#fff;font-size:14px;">ADISTIC</span></button>
+  <button class="pb" onclick="applyPreset('S')"><span style="color:#ff2200;">S</span><span style="color:#fff;font-size:14px;">UPREME</span></button>
+  <button class="pb" onclick="applyPreset('A')"><span style="color:#ff8800;">A</span><span style="color:#fff;font-size:14px;">NARCHIC</span></button>
+  <button class="pb" onclick="applyPreset('B')"><span style="color:#ffcc00;">B</span><span style="color:#fff;font-size:14px;">RUTAL</span></button>
+  <button class="pb" onclick="applyPreset('C')"><span style="color:#44dd44;">C</span><span style="color:#fff;font-size:14px;">HAOTIC</span></button>
+  <button class="pb" onclick="applyPreset('D')"><span style="color:#44aaff;">D</span><span style="color:#fff;font-size:14px;">ESTRUCTIVE</span></button>
+</div>
+
+<div class="controls">
+  <div class="ctrl">
+    <label>Rank letters (colored)</label>
+    <input type="text" id="rankLetters" value="ULTRA" oninput="draw()" maxlength="50" />
+  </div>
+  <div class="ctrl">
+    <label>Rest of word</label>
+    <input type="text" id="rankWord" value="KILL" oninput="draw()" maxlength="50" />
+  </div>
+  <div class="ctrl">
+    <label>Rank letter color</label>
+    <input type="color" id="rankColor" value="#ffcc00" oninput="draw()" />
+  </div>
+  <div class="ctrl">
+    <label>Word color</label>
+    <input type="color" id="wordColor" value="#ffcc00" oninput="draw()" />
+  </div>
+  <div class="ctrl">
+    <label>Rank letter size</label>
+    <div class="row">
+      <input type="range" min="20" max="100" value="72" step="1" id="rankSize" oninput="draw();document.getElementById('rankSizeV').textContent=this.value" />
+      <span class="val" id="rankSizeV">72</span>
+    </div>
+  </div>
+  <div class="ctrl">
+    <label>Word size</label>
+    <div class="row">
+      <input type="range" min="14" max="80" value="72" step="1" id="wordSize" oninput="draw();document.getElementById('wordSizeV').textContent=this.value" />
+      <span class="val" id="wordSizeV">72</span>
+    </div>
+  </div>
+  <div class="ctrl">
+    <label>Skew</label>
+    <div class="row">
+      <input type="range" min="-25" max="0" value="0" step="1" id="skew" oninput="draw();document.getElementById('skewV').textContent=this.value+'°'" />
+      <span class="val" id="skewV">0°</span>
+    </div>
+  </div>
+  <div class="ctrl">
+    <label>Letter spacing</label>
+    <div class="row">
+      <input type="range" min="-15" max="20" value="-3" step="1" id="lspacing" oninput="draw();document.getElementById('lspacingV').textContent=this.value" />
+      <span class="val" id="lspacingV">-3</span>
+    </div>
+  </div>
+  <div class="ctrl">
+    <label>Vertical offset</label>
+    <div class="row">
+      <input type="range" min="-30" max="30" value="0" step="1" id="voffset" oninput="draw();document.getElementById('voffsetV').textContent=this.value" />
+      <span class="val" id="voffsetV">0</span>
+    </div>
+  </div>
+  <div class="ctrl">
+    <label>Horizontal offset</label>
+    <div class="row">
+      <input type="range" min="-80" max="80" value="0" step="1" id="hoffset" oninput="draw();document.getElementById('hoffsetV').textContent=this.value" />
+      <span class="val" id="hoffsetV">0</span>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <label>Shadow X Offset</label>
+    <div class="row">
+      <input type="range" min="-15" max="15" value="2" step="1" id="shoffset" oninput="draw();document.getElementById('shoffsetV').textContent=this.value" />
+      <span class="val" id="shoffsetV">2</span>
+    </div>
+  </div>
+  <div class="ctrl">
+    <label>Shadow Y Offset</label>
+    <div class="row">
+      <input type="range" min="-15" max="15" value="2" step="1" id="svoffset" oninput="draw();document.getElementById('svoffsetV').textContent=this.value" />
+      <span class="val" id="svoffsetV">2</span>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <label>Shadow color</label>
+    <input type="color" id="shadowColor" value="#f38401" oninput="draw()" />
+  </div>
+
+  <div class="ctrl ctrl-chk">
+    <input type="checkbox" id="showShadow" checked onchange="draw()" />
+    <label for="showShadow" style="cursor:pointer; font-weight:bold; color:#fff;">Enable Shadows</label>
+  </div>
+
+  <div class="ctrl full">
+    <label>Background color</label>
+    <input type="color" id="bgColor" value="#111111" oninput="draw()" />
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('preview');
+const outputImage = document.getElementById('outputImage');
+
+const PRESETS = {
+  ULTRAKILL: { letters:'ULTRA', word:'KILL',     rankColor:'#ffcc00', wordColor:'#ffcc00', shadowColor:'#feaa00', rankSize:72, wordSize:72, skew:0, lspacing:-3, shadow: true },
+  SSS:       { letters:'SSS',   word:'HITSTORM', rankColor:'#ff2200', wordColor:'#ffffff', shadowColor:'#b32400', rankSize:72, wordSize:58, skew:0, lspacing:2, shadow: false },
+  SS:        { letters:'SS',    word:'ADISTIC',  rankColor:'#ff2200', wordColor:'#ffffff', shadowColor:'#b32400', rankSize:72, wordSize:58, skew:0, lspacing:2, shadow: false },
+  S:         { letters:'S',     word:'UPREME',   rankColor:'#ff2200', wordColor:'#ffffff', shadowColor:'#b32400', rankSize:72, wordSize:58, skew:0, lspacing:2, shadow: false },
+  A:         { letters:'A',     word:'NARCHIC',  rankColor:'#ff8800', wordColor:'#ffffff', shadowColor:'#b32400', rankSize:72, wordSize:58, skew:0, lspacing:2, shadow: false },
+  B:         { letters:'B',     word:'RUTAL',    rankColor:'#ffcc00', wordColor:'#ffffff', shadowColor:'#b32400', rankSize:72, wordSize:58, skew:0, lspacing:2, shadow: false },
+  C:         { letters:'C',     word:'HAOTIC',   rankColor:'#44dd44', wordColor:'#ffffff', shadowColor:'#b32400', rankSize:72, wordSize:58, skew:0, lspacing:2, shadow: false },
+  D:         { letters:'D',     word:'ESTRUCTIVE',rankColor:'#44aaff', wordColor:'#ffffff', shadowColor:'#b32400', rankSize:72, wordSize:58, skew:0, lspacing:2, shadow: false },
+};
+
+function applyPreset(key) {
+  const p = PRESETS[key];
+  document.getElementById('rankLetters').value = p.letters;
+  document.getElementById('rankWord').value = p.word;
+  document.getElementById('rankColor').value = p.rankColor;
+  document.getElementById('wordColor').value = p.wordColor;
+  document.getElementById('shadowColor').value = p.shadowColor;
+  document.getElementById('rankSize').value = p.rankSize; document.getElementById('rankSizeV').textContent = p.rankSize;
+  document.getElementById('wordSize').value = p.wordSize; document.getElementById('wordSizeV').textContent = p.wordSize;
+  document.getElementById('skew').value = p.skew; document.getElementById('skewV').textContent = p.skew+'°';
+  document.getElementById('lspacing').value = p.lspacing; document.getElementById('lspacingV').textContent = p.lspacing;
+  document.getElementById('showShadow').checked = p.shadow;
+  draw();
+}
+
+function getVals() {
+  return {
+    letters:     (document.getElementById('rankLetters').value || '').toUpperCase(),
+    word:        (document.getElementById('rankWord').value || '').toUpperCase(),
+    rankColor:   document.getElementById('rankColor').value,
+    wordColor:   document.getElementById('wordColor').value,
+    shadowColor: document.getElementById('shadowColor').value,
+    rankSize:    +document.getElementById('rankSize').value,
+    wordSize:    +document.getElementById('wordSize').value,
+    skew:        +document.getElementById('skew').value,
+    lspacing:    +document.getElementById('lspacing').value,
+    voffset:     +document.getElementById('voffset').value,
+    hoffset:     +document.getElementById('hoffset').value,
+    shoffset:    +document.getElementById('shoffset').value,
+    svoffset:    +document.getElementById('svoffset').value,
+    showShadow:  document.getElementById('showShadow').checked,
+    bgColor:     document.getElementById('bgColor').value,
+  };
+}
+
+function drawToCanvas(c) {
+  const cx = c.getContext('2d');
+  const v = getVals();
+  const W = c.width, H = c.height;
+
+  cx.clearRect(0, 0, W, H);
+  cx.fillStyle = v.bgColor;
+  cx.fillRect(0, 0, W, H);
+
+  const skewRad = (v.skew * Math.PI) / 180;
+
+  cx.font = `${v.rankSize}px 'Bebas Neue', sans-serif`;
+  cx.letterSpacing = v.lspacing + 'px';
+  const rankW = v.letters ? cx.measureText(v.letters).width : 0;
+
+  cx.font = `${v.wordSize}px 'Bebas Neue', sans-serif`;
+  cx.letterSpacing = v.lspacing + 'px';
+  const wordW = v.word ? cx.measureText(v.word).width : 0;
+
+  const totalW = rankW + wordW;
+  const skewShift = Math.abs(Math.tan(skewRad)) * H * 0.5;
+  const startX = (W - totalW) / 2 + v.hoffset + skewShift;
+
+  const baseline = H * 0.72 + v.voffset;
+
+  cx.save();
+  cx.transform(1, 0, Math.tan(skewRad), 1, 0, 0);
+  cx.textBaseline = 'alphabetic';
+
+  if (v.showShadow) {
+    cx.fillStyle = '#000000';
+    for (let i = 2; i <= 3; i++) {
+      const xS = (v.shoffset >= 0 ? v.shoffset + i : v.shoffset - i);
+      const yS = (v.svoffset >= 0 ? v.svoffset + i : v.svoffset - i);
+      if (v.letters) {
+        cx.font = `${v.rankSize}px 'Bebas Neue', sans-serif`;
+        cx.letterSpacing = v.lspacing + 'px';
+        cx.fillText(v.letters, startX + xS, baseline + yS);
+      }
+      if (v.word) {
+        cx.font = `${v.wordSize}px 'Bebas Neue', sans-serif`;
+        cx.letterSpacing = v.lspacing + 'px';
+        cx.fillText(v.word, startX + rankW + xS, baseline + yS);
+      }
+    }
+
+    cx.fillStyle = v.shadowColor; 
+    const steps = Math.max(Math.abs(v.shoffset), Math.abs(v.svoffset), 1);
+    for (let i = 1; i <= steps; i++) {
+      const ratio = i / steps;
+      const currX = v.shoffset * ratio;
+      const currY = v.svoffset * ratio;
+
+      if (v.letters) {
+        cx.font = `${v.rankSize}px 'Bebas Neue', sans-serif`;
+        cx.letterSpacing = v.lspacing + 'px';
+        cx.fillText(v.letters, startX + currX, baseline + currY);
+      }
+      if (v.word) {
+        cx.font = `${v.wordSize}px 'Bebas Neue', sans-serif`;
+        cx.letterSpacing = v.lspacing + 'px';
+        cx.fillText(v.word, startX + rankW + currX, baseline + currY);
+      }
+    }
+  }
+
+  if (v.letters) {
+    cx.font = `${v.rankSize}px 'Bebas Neue', sans-serif`;
+    cx.letterSpacing = v.lspacing + 'px';
+    cx.fillStyle = v.rankColor;
+    cx.fillText(v.letters, startX, baseline);
+  }
+
+  if (v.word) {
+    cx.font = `${v.wordSize}px 'Bebas Neue', sans-serif`;
+    cx.letterSpacing = v.lspacing + 'px';
+    cx.fillStyle = v.wordColor;
+    cx.fillText(v.word, startX + rankW, baseline);
+  }
+
+  cx.restore();
+
+  // Update the HTML image element so it matches the canvas layout live
+  try {
+    outputImage.src = c.toDataURL('image/png');
+  } catch(e) {
+    console.warn("Local security sandbox restriction prevents live right-click image data extraction.");
+  }
+}
+
+function draw() { drawToCanvas(canvas); }
+
+// Wait for layout parameters to trigger paint initialization
+if (document.fonts) {
+  document.fonts.ready.then(() => draw());
+}
+setTimeout(draw, 250);
+</script>
+</body>
+</html>
